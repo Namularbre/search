@@ -9,15 +9,23 @@ import (
 )
 
 func parseArgs() string {
-	if len(os.Args) < 1 {
+	if len(os.Args) <= 1 {
 		panic("Wrong usage: search your_search")
 	}
 
-	return os.Args[1]
+	var search string
+
+	for argIndex, arg := range os.Args {
+		if argIndex != 0 {
+			search += arg + " "
+		}
+	}
+
+	return strings.Trim(search, " ")
 }
 
 func isSupportedFile(path string) bool {
-	validSuffixes := []string{".txt", ".pdf", ".doc", ".docx", ".png", ".jpeg", ".webp", ".go"}
+	validSuffixes := []string{".txt", ".pdf", ".doc", ".docx", ".png", ".jpeg", ".webp", ".go", ".c", ".cpp", ".h", ".hpp", ".deb"}
 	isSupported := false
 
 	for _, suffix := range validSuffixes {
@@ -27,9 +35,10 @@ func isSupportedFile(path string) bool {
 	return isSupported
 }
 
-func search(search string) []string {
+func search(searchContent string) int {
+	fmt.Printf("Searching for %v\n", searchContent)
 	root := "/home/namu"
-	var results []string
+	var resultCount int
 
 	err := filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
@@ -37,9 +46,9 @@ func search(search string) []string {
 			return err
 		}
 
-		if strings.Contains(path, search) && isSupportedFile(path) {
+		if strings.Contains(path, searchContent) && isSupportedFile(path) {
+			resultCount += 1
 			fmt.Println(path)
-			results = append(results, path+"\n")
 		}
 
 		return nil
@@ -49,15 +58,13 @@ func search(search string) []string {
 		panic(err)
 	}
 
-	return results
+	return resultCount
 }
 
 func main() {
 	searchContent := parseArgs()
-	results := search(searchContent)
-	if len(results) > 0 {
-		fmt.Println(results)
-	} else {
-		fmt.Println("No results found")
+	resultCount := search(searchContent)
+	if resultCount == 0 {
+		fmt.Println("No result found")
 	}
 }
